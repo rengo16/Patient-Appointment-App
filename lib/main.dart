@@ -1,11 +1,10 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:patientappointment/core/providers/appointment_provider.dart';
 import 'package:patientappointment/core/providers/auth_provider.dart';
 import 'package:patientappointment/core/providers/doctor_provider.dart';
 import 'package:patientappointment/core/services/local_storage_service.dart';
-import 'package:patientappointment/core/services/notification_service.dart';
+import 'package:patientappointment/core/services/notification_service.dart'; // Ensure this is imported
 import 'package:patientappointment/data/repos/appointment_repository.dart';
 import 'package:patientappointment/data/repos/doctor_repository.dart';
 import 'package:patientappointment/data/repos/user_repository.dart';
@@ -16,11 +15,16 @@ import 'package:patientappointment/presentation/screens/home_tabs_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await LocalStorageService.init();
-  await NotificationService().init();
+  final notificationService = NotificationService(); // Get the instance
+  await notificationService.init();                 // Initialize it
 
   runApp(
     MultiProvider(
       providers: [
+        // You can also provide NotificationService itself if other providers might need it,
+        // though in this case, only AppointmentProvider needs it directly.
+        // Provider(create: (_) => notificationService), // Optional: provide NotificationService globally
+
         Provider(create: (_) => UserRepository()),
         Provider(create: (_) => DoctorRepository()),
         Provider(create: (_) => AppointmentRepository()),
@@ -35,6 +39,7 @@ void main() async {
           create: (context) => AppointmentProvider(
             context.read<AppointmentRepository>(),
             context.read<AuthProvider>(),
+            notificationService, // <<< PASS THE NOTIFICATION SERVICE INSTANCE HERE
           ),
         ),
       ],

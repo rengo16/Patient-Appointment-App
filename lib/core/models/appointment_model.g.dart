@@ -1,8 +1,10 @@
-
+// GENERATED CODE - DO NOT MODIFY BY HAND
 
 part of 'appointment_model.dart';
 
-
+// **************************************************************************
+// TypeAdapterGenerator
+// **************************************************************************
 
 class AppointmentAdapter extends TypeAdapter<Appointment> {
   @override

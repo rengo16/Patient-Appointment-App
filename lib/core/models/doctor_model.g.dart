@@ -1,8 +1,10 @@
-
+// GENERATED CODE - DO NOT MODIFY BY HAND
 
 part of 'doctor_model.dart';
 
-
+// **************************************************************************
+// TypeAdapterGenerator
+// **************************************************************************
 
 class DoctorAdapter extends TypeAdapter<Doctor> {
   @override
