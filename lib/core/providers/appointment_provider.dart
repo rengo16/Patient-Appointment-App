@@ -1,4 +1,4 @@
-// lib/core/providers/appointment_provider.dart
+
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:patientappointment/core/models/appointment_model.dart';
@@ -10,7 +10,7 @@ import 'package:timezone/timezone.dart' as tz;
 class AppointmentProvider with ChangeNotifier {
   final AppointmentRepository _appointmentRepository;
   final AuthProvider _authProvider;
-  final NotificationService _notificationService; // <<< Injected dependency
+  final NotificationService _notificationService;
 
   List<Appointment> _allUserAppointments = [];
   bool _isLoading = false;
@@ -19,7 +19,7 @@ class AppointmentProvider with ChangeNotifier {
   AppointmentProvider(
       this._appointmentRepository,
       this._authProvider,
-      this._notificationService, // <<< Added to constructor
+      this._notificationService,
       ) {
     _authProvider.addListener(onAuthStateChanged);
     onAuthStateChanged();
@@ -150,15 +150,13 @@ class AppointmentProvider with ChangeNotifier {
         _allUserAppointments.add(newAppointment);
       }
       debugPrint("PROVIDER - addAppointment: Successfully added Appt ID: ${newAppointment.id} for user ${currentUser.id}. DateTime: ${DateFormat('yyyy-MM-dd HH:mm').format(newAppointment.dateTime.toLocal())}, Status: ${newAppointment.status}");
-
-      // Convert to TZDateTime for the notification service
       final scheduledTZTime = tz.TZDateTime.from(newAppointment.dateTime, tz.local);
       if (scheduledTZTime.isAfter(tz.TZDateTime.now(tz.local))) {
-        await _notificationService.scheduleNotification( // Use injected service
+        await _notificationService.scheduleNotification(
           id: newAppointment.notificationId,
           title: 'Appointment Reminder',
           body: 'Appointment for ${newAppointment.patientName} at ${DateFormat.yMMMMd().add_jm().format(newAppointment.dateTime.toLocal())}',
-          scheduledDateTime: scheduledTZTime, // Pass TZDateTime
+          scheduledDateTime: scheduledTZTime,
           payload: 'appointment_id=${newAppointment.id}',
         );
       }
@@ -203,7 +201,7 @@ class AppointmentProvider with ChangeNotifier {
       Appointment oldAppointment = appointmentToUpdate;
       if ((oldAppointment.status == AppointmentStatus.pending || oldAppointment.status == AppointmentStatus.approved) &&
           (newStatus != AppointmentStatus.pending && newStatus != AppointmentStatus.approved)) {
-        await _notificationService.cancelNotification(oldAppointment.notificationId); // Use injected
+        await _notificationService.cancelNotification(oldAppointment.notificationId);
       }
       final updatedAppointmentData = oldAppointment.copyWith(
         status: newStatus,
@@ -217,12 +215,12 @@ class AppointmentProvider with ChangeNotifier {
           updatedAppointmentData.dateTime.isAfter(DateTime.now())) {
         final scheduledTZTime = tz.TZDateTime.from(updatedAppointmentData.dateTime, tz.local);
         if (scheduledTZTime.isAfter(tz.TZDateTime.now(tz.local))) {
-          await _notificationService.cancelNotification(updatedAppointmentData.notificationId); // Use injected
-          await _notificationService.scheduleNotification( // Use injected
+          await _notificationService.cancelNotification(updatedAppointmentData.notificationId);
+          await _notificationService.scheduleNotification(
             id: updatedAppointmentData.notificationId,
             title: 'Appointment ${newStatus.name}',
             body: 'Appointment for ${updatedAppointmentData.patientName} at ${DateFormat.yMMMMd().add_jm().format(updatedAppointmentData.dateTime.toLocal())} is now ${newStatus.name}.',
-            scheduledDateTime: scheduledTZTime, // Pass TZDateTime
+            scheduledDateTime: scheduledTZTime,
             payload: 'appointment_id=${updatedAppointmentData.id}',
           );
         }
@@ -277,7 +275,7 @@ class AppointmentProvider with ChangeNotifier {
         return;
       }
       Appointment oldAppointment = appointmentToReschedule;
-      await _notificationService.cancelNotification(oldAppointment.notificationId); // Use injected
+      await _notificationService.cancelNotification(oldAppointment.notificationId);
       final newNotificationId = DateTime.now().millisecondsSinceEpoch % 1000000;
       final updatedAppointmentData = oldAppointment.copyWith(
         dateTime: newDateTime,
@@ -292,11 +290,11 @@ class AppointmentProvider with ChangeNotifier {
       final scheduledTZTime = tz.TZDateTime.from(updatedAppointmentData.dateTime, tz.local);
       if (scheduledTZTime.isAfter(tz.TZDateTime.now(tz.local))) {
         String notificationTitle = isAdminUpdate ? 'Admin Rescheduled Your Appointment' : 'Appointment Rescheduled';
-        await _notificationService.scheduleNotification( // Use injected
+        await _notificationService.scheduleNotification(
           id: updatedAppointmentData.notificationId,
           title: notificationTitle,
           body: 'Appointment for ${updatedAppointmentData.patientName} now at ${DateFormat.yMMMMd().add_jm().format(updatedAppointmentData.dateTime.toLocal())}.',
-          scheduledDateTime: scheduledTZTime, // Pass TZDateTime
+          scheduledDateTime: scheduledTZTime,
           payload: 'appointment_id=${updatedAppointmentData.id}&user_id=${patientUserIdForNotification ?? "unknown"}',
         );
       }
@@ -346,7 +344,7 @@ class AppointmentProvider with ChangeNotifier {
         notifyListeners();
         return;
       }
-      await _notificationService.cancelNotification(appointmentToDelete.notificationId); // Use injected
+      await _notificationService.cancelNotification(appointmentToDelete.notificationId);
       await _appointmentRepository.deleteAppointment(appointmentId);
       if (!isAdminDelete && appointmentIndexInUserList != -1) {
         _allUserAppointments.removeAt(appointmentIndexInUserList);
